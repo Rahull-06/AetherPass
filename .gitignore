@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/target/
+
+# Env
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+backend/.env
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs / build
+*.log
+.next/
+frontend/.next/
+frontend/out/
+dist/
+build/
+
+# Docker volumes (local)
+*.pid

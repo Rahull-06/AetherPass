@@ -1,0 +1,3 @@
+-- Place incremental SQL migrations here (e.g. 002_add_index.sql).
+-- Application schema source of truth: ../schema/001_init_schema.sql
+-- Optional: Flyway/Liquibase can later sync these into backend/src/main/resources/db/migration

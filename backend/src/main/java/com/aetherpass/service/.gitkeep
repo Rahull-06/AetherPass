@@ -1,0 +1,3 @@
+# Package placeholders — keep empty layers discoverable in the repo
+# Modules land here as features are built:
+# auth, event, booking, payment, organizer, admin, notification
