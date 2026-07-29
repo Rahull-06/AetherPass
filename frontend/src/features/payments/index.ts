@@ -1,2 +1,1 @@
-/** Payments feature — Razorpay checkout + verification */
-export {};
+export { openRazorpayCheckout, loadRazorpayScript } from "./razorpay-checkout";

@@ -1,2 +1,1 @@
-/** Booking feature — seat map, hold, checkout */
-export {};
+export { SeatMapView } from "./seat-map-view";

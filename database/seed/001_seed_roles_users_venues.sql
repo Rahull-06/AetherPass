@@ -7,13 +7,12 @@ INSERT INTO roles (name, description) VALUES
 ('ROLE_ADMIN', 'Platform administrator')
 ON DUPLICATE KEY UPDATE description = VALUES(description);
 
--- Password for all seed users: Password@123 (BCrypt hash — replace after auth module generates real hashes)
--- Placeholder hash below is bcrypt for "Password@123"
+-- Password for all seed users: Password@123
 INSERT INTO users (email, password_hash, full_name, phone, status, email_verified) VALUES
-('admin@aetherpass.dev', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Aether Admin', '9000000001', 'ACTIVE', TRUE),
-('organizer@livearena.in', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Riya Sharma', '9000000002', 'ACTIVE', TRUE),
-('user@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Arjun Mehta', '9000000003', 'ACTIVE', TRUE)
-ON DUPLICATE KEY UPDATE full_name = VALUES(full_name);
+('admin@aetherpass.dev', '$2a$10$I0HbgBwK/dQKPPn5o5MsQOJM7pxfEUAAzhKcGim/odSDfUwGWtmwy', 'Aether Admin', '9000000001', 'ACTIVE', TRUE),
+('organizer@livearena.in', '$2a$10$I0HbgBwK/dQKPPn5o5MsQOJM7pxfEUAAzhKcGim/odSDfUwGWtmwy', 'Riya Sharma', '9000000002', 'ACTIVE', TRUE),
+('user@example.com', '$2a$10$I0HbgBwK/dQKPPn5o5MsQOJM7pxfEUAAzhKcGim/odSDfUwGWtmwy', 'Arjun Mehta', '9000000003', 'ACTIVE', TRUE)
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), full_name = VALUES(full_name);
 
 INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id FROM users u JOIN roles r ON r.name = 'ROLE_ADMIN' WHERE u.email = 'admin@aetherpass.dev'

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { DM_Sans, Outfit } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
 import "./globals.css";
 
-const display = Fraunces({
+const display = Outfit({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["500", "600", "700", "800"],
 });
 
-const body = Manrope({
+const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -20,8 +20,7 @@ export const metadata: Metadata = {
     default: "AetherPass",
     template: "%s · AetherPass",
   },
-  description:
-    "Premium event ticket booking — discover live shows, lock seats, and pass the gate with confidence.",
+  description: "Book concerts, comedy and live shows near you.",
 };
 
 export default function RootLayout({

@@ -9,7 +9,8 @@ services:
       MYSQL_USER: aetherpass
       MYSQL_PASSWORD: aetherpass
     ports:
-      - "3306:3306"
+      # Host 3307 — local Windows MySQL often already owns 3306
+      - "3307:3306"
     volumes:
       - aetherpass_mysql_data:/var/lib/mysql
       - ./database/schema/001_init_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
@@ -42,8 +43,9 @@ services:
       RABBITMQ_DEFAULT_USER: aetherpass
       RABBITMQ_DEFAULT_PASS: aetherpass
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      # Host 5673/15673 — another compose stack may already own 5672/15672
+      - "5673:5672"
+      - "15673:15672"
     volumes:
       - aetherpass_rabbitmq_data:/var/lib/rabbitmq
     healthcheck:

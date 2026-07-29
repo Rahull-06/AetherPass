@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f3ee;
-  --foreground: #1a1c1e;
-  --muted: #5c636a;
+  /* Cinema booking palette — close to BMS energy, still AetherPass */
+  --background: #f5f5f7;
+  --foreground: #1a1a1a;
+  --muted: #6b7280;
   --surface: #ffffff;
-  --border: #e4ddd3;
-  --accent: #0f6e56;
-  --accent-soft: #d8efe6;
-  --ink: #121417;
-  --highlight: #c45c26;
+  --border: #e5e7eb;
+  --accent: #e11d48;
+  --accent-soft: #ffe4ea;
+  --ink: #111827;
+  --highlight: #be123c;
+  --panel: #0b0f19;
+  --panel-muted: #9ca3af;
+  --chip: #f3f4f6;
 }
 
 @theme inline {
@@ -22,15 +26,15 @@
   --color-accent-soft: var(--accent-soft);
   --color-ink: var(--ink);
   --color-highlight: var(--highlight);
+  --color-panel: var(--panel);
+  --color-panel-muted: var(--panel-muted);
+  --color-chip: var(--chip);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
 }
 
 body {
-  background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, #d8efe6 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 100% 0%, #f3e0d4 0%, transparent 45%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
 }
@@ -38,4 +42,39 @@ body {
 ::selection {
   background: var(--accent-soft);
   color: var(--ink);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: rise-in 380ms ease-out both;
+}
+
+/* Hide scrollbar for BMS-style horizontal rails */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile app shell padding for bottom nav */
+.pb-mobile-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .pb-mobile-nav {
+    padding-bottom: 0;
+  }
 }

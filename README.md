@@ -3,7 +3,7 @@
 Monorepo layout with a clear Frontend → Backend → Database flow.
 
 ```text
-EventTicket/
+ AetherPass/
 ├── frontend/          # Next.js (App Router) — UI
 ├── backend/           # Spring Boot 3 — REST API
 ├── database/          # MySQL schema + seed
@@ -16,9 +16,9 @@ EventTicket/
 ```bash
 docker compose up -d
 ```
-- MySQL: `localhost:3306` (db/user/pass: `aetherpass`)
+- MySQL: `localhost:3307` (db/user/pass: `aetherpass`) — host `3307` avoids local MySQL on `3306`
 - Redis: `localhost:6379`
-- RabbitMQ: `localhost:5672` · UI `http://localhost:15672` (aetherpass / aetherpass)
+- RabbitMQ: `localhost:5673` · UI `http://localhost:15673` (aetherpass / aetherpass)
 
 ### 2. Backend
 ```bash
