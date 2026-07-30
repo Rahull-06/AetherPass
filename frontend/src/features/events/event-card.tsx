@@ -24,6 +24,8 @@ type Props = {
 };
 
 export function EventCard({ event, compact }: Props) {
+  const banner = event.bannerUrl?.trim();
+
   return (
     <Link
       href={`/events/${event.slug}`}
@@ -35,15 +37,26 @@ export function EventCard({ event, compact }: Props) {
     >
       <div
         className={
-          compact ? "relative aspect-[2/3] overflow-hidden" : "relative aspect-[3/4] overflow-hidden sm:aspect-[16/10]"
+          compact
+            ? "relative aspect-[2/3] overflow-hidden"
+            : "relative aspect-[3/4] overflow-hidden sm:aspect-[16/10]"
         }
       >
-        <div
-          aria-hidden
-          className="absolute inset-0 transition duration-300 group-hover:scale-[1.04]"
-          style={{ background: posters[event.category] ?? posters.MUSIC }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        {banner ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={banner}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div
+            aria-hidden
+            className="absolute inset-0 transition duration-300 group-hover:scale-[1.04]"
+            style={{ background: posters[event.category] ?? posters.MUSIC }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
         <span className="absolute left-2 top-2 rounded bg-black/45 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase backdrop-blur-sm">
           {event.category}
         </span>

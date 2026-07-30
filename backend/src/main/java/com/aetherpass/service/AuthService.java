@@ -113,10 +113,17 @@ public class AuthService {
             throw new ApiException("Refresh token user mismatch", HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN");
         }
 
+        User user = stored.getUser();
+        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            stored.setRevoked(true);
+            refreshTokenRepository.save(stored);
+            throw new ApiException("Account is not active", HttpStatus.FORBIDDEN, "ACCOUNT_NOT_ACTIVE");
+        }
+
         stored.setRevoked(true);
         refreshTokenRepository.save(stored);
 
-        return issueTokens(stored.getUser());
+        return issueTokens(user);
     }
 
     public void logout(LogoutRequest request) {

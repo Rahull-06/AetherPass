@@ -28,6 +28,7 @@ public class BookingResponse {
     private BigDecimal discountAmount;
     private BigDecimal totalAmount;
     private String currency;
+    private String couponCode;
     private Instant expiresAt;
     private Instant createdAt;
     private List<SeatInfo> seats;

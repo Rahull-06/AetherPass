@@ -2,8 +2,10 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: validate
+      # Dev: allow additive column updates (e.g. coupons.min_order_amount)
+      ddl-auto: update
 
 logging:
   level:
     com.aetherpass: DEBUG
+    org.hibernate.SQL: WARN

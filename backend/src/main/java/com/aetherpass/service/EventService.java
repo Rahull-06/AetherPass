@@ -13,6 +13,7 @@ import com.aetherpass.exception.ApiException;
 import com.aetherpass.mapper.EventMapper;
 import com.aetherpass.repository.EventRepository;
 import com.aetherpass.repository.OrganizerRepository;
+import com.aetherpass.repository.ReviewRepository;
 import com.aetherpass.repository.VenueRepository;
 import com.aetherpass.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,9 @@ public class EventService {
     private final OrganizerRepository organizerRepository;
     private final EventMapper eventMapper;
     private final SeatMapService seatMapService;
+    private final ReviewRepository reviewRepository;
+    private final WishlistService wishlistService;
+    private final EventCacheService eventCacheService;
 
     @Transactional(readOnly = true)
     public PageResponse<EventSummaryResponse> browse(
@@ -69,33 +73,54 @@ public class EventService {
                 throw new ApiException("Invalid category", HttpStatus.BAD_REQUEST, "INVALID_CATEGORY");
             }
         }
+        final String categoryFilter = normalizedCategory;
 
-        Page<Event> result = eventRepository.searchPublished(
-                STATUS_PUBLISHED,
-                blankToNull(q),
-                normalizedCategory,
-                blankToNull(city),
-                PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 40))
-        );
+        String qNorm = blankToNull(q);
+        String cityNorm = blankToNull(city);
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 40);
 
-        return PageResponse.<EventSummaryResponse>builder()
-                .content(result.getContent().stream().map(eventMapper::toSummary).toList())
-                .page(result.getNumber())
-                .size(result.getSize())
-                .totalElements(result.getTotalElements())
-                .totalPages(result.getTotalPages())
-                .build();
+        return eventCacheService.getBrowse(qNorm, categoryFilter, cityNorm, safePage, safeSize)
+                .orElseGet(() -> {
+                    Page<Event> result = eventRepository.searchPublished(
+                            STATUS_PUBLISHED,
+                            qNorm,
+                            categoryFilter,
+                            cityNorm,
+                            PageRequest.of(safePage, safeSize)
+                    );
+
+                    PageResponse<EventSummaryResponse> payload = PageResponse.<EventSummaryResponse>builder()
+                            .content(result.getContent().stream().map(eventMapper::toSummary).toList())
+                            .page(result.getNumber())
+                            .size(result.getSize())
+                            .totalElements(result.getTotalElements())
+                            .totalPages(result.getTotalPages())
+                            .build();
+                    eventCacheService.putBrowse(qNorm, categoryFilter, cityNorm, safePage, safeSize, payload);
+                    return payload;
+                });
     }
 
     @Transactional(readOnly = true)
-    public EventDetailResponse getPublishedBySlug(String slug) {
-        Event event = eventRepository.findDetailedBySlug(slug)
-                .orElseThrow(() -> new ApiException("Event not found", HttpStatus.NOT_FOUND, "EVENT_NOT_FOUND"));
+    public EventDetailResponse getPublishedBySlug(String slug, String viewerEmail) {
+        EventDetailResponse detail = eventCacheService.getDetail(slug).orElseGet(() -> {
+            Event event = eventRepository.findDetailedBySlug(slug)
+                    .orElseThrow(() -> new ApiException("Event not found", HttpStatus.NOT_FOUND, "EVENT_NOT_FOUND"));
 
-        if (!STATUS_PUBLISHED.equals(event.getStatus())) {
-            throw new ApiException("Event not found", HttpStatus.NOT_FOUND, "EVENT_NOT_FOUND");
-        }
-        return eventMapper.toDetail(event);
+            if (!STATUS_PUBLISHED.equals(event.getStatus())) {
+                throw new ApiException("Event not found", HttpStatus.NOT_FOUND, "EVENT_NOT_FOUND");
+            }
+            EventDetailResponse fresh = eventMapper.toDetail(event);
+            Double avg = reviewRepository.averageRating(event.getId());
+            fresh.setAverageRating(avg == null ? 0.0 : Math.round(avg * 10.0) / 10.0);
+            fresh.setReviewCount(reviewRepository.countByEventId(event.getId()));
+            eventCacheService.putDetail(slug, fresh);
+            return fresh;
+        });
+
+        detail.setWishlisted(wishlistService.isSaved(viewerEmail, detail.getId()));
+        return detail;
     }
 
     @Transactional(readOnly = true)
@@ -190,7 +215,10 @@ public class EventService {
             return eventMapper.toDetail(event);
         }
         event.setStatus(STATUS_CANCELLED);
-        return eventMapper.toDetail(eventRepository.save(event));
+        Event saved = eventRepository.save(event);
+        eventCacheService.evictCatalog();
+        eventCacheService.evictDetail(saved.getSlug());
+        return eventMapper.toDetail(saved);
     }
 
     @Transactional(readOnly = true)
@@ -209,6 +237,8 @@ public class EventService {
         event.setStatus(STATUS_PUBLISHED);
         Event saved = eventRepository.save(event);
         seatMapService.ensureSeatsForEvent(saved);
+        eventCacheService.evictCatalog();
+        eventCacheService.evictDetail(saved.getSlug());
         return eventMapper.toDetail(saved);
     }
 
@@ -219,7 +249,10 @@ public class EventService {
             throw new ApiException("Only pending events can be rejected", HttpStatus.CONFLICT, "INVALID_STATUS");
         }
         event.setStatus(STATUS_DRAFT);
-        return eventMapper.toDetail(eventRepository.save(event));
+        Event saved = eventRepository.save(event);
+        eventCacheService.evictCatalog();
+        eventCacheService.evictDetail(saved.getSlug());
+        return eventMapper.toDetail(saved);
     }
 
     private Event requireOwnedEvent(String organizerEmail, Long id) {

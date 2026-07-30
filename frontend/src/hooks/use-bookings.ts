@@ -49,3 +49,26 @@ export function useCancelBooking() {
     },
   });
 }
+
+export function useApplyCoupon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, code }: { id: number; code: string }) =>
+      bookingService.applyCoupon(id, code),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: ["bookings", data.id] });
+      void qc.invalidateQueries({ queryKey: ["bookings", "me"] });
+    },
+  });
+}
+
+export function useRemoveCoupon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => bookingService.removeCoupon(id),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: ["bookings", data.id] });
+      void qc.invalidateQueries({ queryKey: ["bookings", "me"] });
+    },
+  });
+}

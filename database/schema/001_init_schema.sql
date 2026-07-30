@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS coupons (
     description     VARCHAR(255),
     discount_type   VARCHAR(20)    NOT NULL, -- PERCENT | FLAT
     discount_value  DECIMAL(12, 2) NOT NULL,
+    min_order_amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
     max_uses        INT,
     used_count      INT            NOT NULL DEFAULT 0,
     valid_from      TIMESTAMP      NOT NULL,

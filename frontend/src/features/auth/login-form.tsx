@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { AxiosError } from "axios";
 import { useAuth } from "@/providers/auth-provider";
 import { homeForRoles } from "@/services/auth.service";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -85,11 +86,9 @@ export function LoginForm() {
             Forgot password?
           </Link>
         </div>
-        <input
+        <PasswordInput
           id="login-password"
-          type="password"
           autoComplete="current-password"
-          className={fieldClass}
           placeholder="Your password"
           {...register("password")}
         />

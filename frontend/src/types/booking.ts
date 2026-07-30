@@ -32,6 +32,7 @@ export type Booking = {
   discountAmount: number;
   totalAmount: number;
   currency: string;
+  couponCode?: string | null;
   expiresAt?: string | null;
   createdAt?: string | null;
   seats: Array<{

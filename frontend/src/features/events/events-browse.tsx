@@ -97,7 +97,7 @@ export function EventsBrowse() {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 list="event-cities"
-                placeholder="Mumbai, Bengaluru"
+                placeholder="Mumbai, Bengaluru, Hyderabad"
                 className="mt-1.5 w-full rounded-lg border border-border bg-chip px-3 py-2.5 text-sm outline-none focus:border-accent"
               />
               <datalist id="event-cities">

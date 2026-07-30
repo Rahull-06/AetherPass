@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     open-in-view: false
     properties:
       hibernate:
@@ -30,7 +30,7 @@ spring:
     password: ${RABBITMQ_PASSWORD:aetherpass}
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:${SERVER_PORT:8080}}
   servlet:
     context-path: /
 
@@ -50,11 +50,15 @@ aetherpass:
   tickets:
     output-dir: ${TICKETS_OUTPUT_DIR:tickets}
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+    # Comma-separated. Include every Next.js origin you use in local/dev.
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:3001}
   app:
     frontend-url: ${FRONTEND_URL:http://localhost:3000}
   password-reset:
     expiry-ms: ${PASSWORD_RESET_EXPIRY_MS:1800000}
+  cache:
+    event-browse-ttl-seconds: ${EVENT_BROWSE_CACHE_TTL:60}
+    event-detail-ttl-seconds: ${EVENT_DETAIL_CACHE_TTL:300}
 
 springdoc:
   api-docs:

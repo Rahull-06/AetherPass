@@ -1,0 +1,48 @@
+# Render Blueprint — connect this repo in Render Dashboard → New → Blueprint
+# You still need managed MySQL + Redis + RabbitMQ (or free Upstash / CloudAMQP).
+# Set env vars in the dashboard after first create.
+
+services:
+  - type: web
+    name: aetherpass-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod,dev
+      - key: PAYMENTS_PROVIDER
+        value: MOCK
+      - key: JPA_DDL_AUTO
+        value: update
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: RABBITMQ_HOST
+        sync: false
+      - key: RABBITMQ_PORT
+        value: "5672"
+      - key: RABBITMQ_USER
+        sync: false
+      - key: RABBITMQ_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

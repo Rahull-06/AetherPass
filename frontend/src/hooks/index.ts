@@ -16,6 +16,8 @@ export {
   useBooking,
   useHoldSeats,
   useCancelBooking,
+  useApplyCoupon,
+  useRemoveCoupon,
 } from "./use-bookings";
 
 export {
@@ -30,3 +32,19 @@ export {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "./use-notifications";
+
+export { useWishlist, useToggleWishlist } from "./use-wishlist";
+
+export { useEventReviews, useUpsertReview } from "./use-reviews";
+
+export {
+  useAdminAnalytics,
+  useScanTicket,
+  useAdminUsers,
+  useUpdateUserStatus,
+  useAdminCoupons,
+  useCreateCoupon,
+  useUpdateCoupon,
+} from "./use-ops";
+
+export { useCouponOffers } from "./use-coupons";

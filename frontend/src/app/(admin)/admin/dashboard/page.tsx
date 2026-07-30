@@ -29,14 +29,35 @@ export default function AdminDashboardPage() {
           Review organizer submissions before they go live.
         </p>
 
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/admin/analytics"
+            className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-ink hover:border-accent/40"
+          >
+            Analytics
+          </Link>
+          <Link
+            href="/admin/users"
+            className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-ink hover:border-accent/40"
+          >
+            Users
+          </Link>
+          <Link
+            href="/admin/coupons"
+            className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-ink hover:border-accent/40"
+          >
+            Coupons
+          </Link>
+          <Link href="/events" className="text-sm font-semibold text-accent self-center">
+            View public catalog
+          </Link>
+        </div>
+
         <section className="mt-10">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-xl font-semibold text-ink">
               Pending approvals
             </h2>
-            <Link href="/events" className="text-sm font-semibold text-accent">
-              View public catalog
-            </Link>
           </div>
 
           {isLoading && (

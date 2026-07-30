@@ -1,5 +1,6 @@
 package com.aetherpass.controller;
 
+import com.aetherpass.dto.request.ApplyCouponRequest;
 import com.aetherpass.dto.request.HoldSeatsRequest;
 import com.aetherpass.dto.response.BookingResponse;
 import com.aetherpass.service.BookingService;
@@ -31,6 +32,23 @@ public class BookingController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(bookingService.holdSeats(authentication.getName(), request));
+    }
+
+    @PostMapping("/{id}/coupon")
+    public ResponseEntity<BookingResponse> applyCoupon(
+            Authentication authentication,
+            @PathVariable Long id,
+            @Valid @RequestBody ApplyCouponRequest request
+    ) {
+        return ResponseEntity.ok(bookingService.applyCoupon(authentication.getName(), id, request));
+    }
+
+    @PostMapping("/{id}/coupon/remove")
+    public ResponseEntity<BookingResponse> removeCoupon(
+            Authentication authentication,
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(bookingService.removeCoupon(authentication.getName(), id));
     }
 
     @PostMapping("/{id}/cancel")

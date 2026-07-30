@@ -48,6 +48,9 @@ export type EventDetail = {
   endsAt: string;
   status: EventStatus;
   organizerCompany?: string | null;
+  averageRating?: number;
+  reviewCount?: number;
+  wishlisted?: boolean;
   venue: {
     id: number;
     name: string;

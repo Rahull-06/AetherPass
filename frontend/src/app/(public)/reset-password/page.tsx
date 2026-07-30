@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { AxiosError } from "axios";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { PasswordInput } from "@/components/ui/password-input";
 import { authService } from "@/services/auth.service";
 
 const schema = z
@@ -69,9 +70,8 @@ function ResetPasswordForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div>
           <label className="text-sm font-semibold text-ink">New password</label>
-          <input
-            type="password"
-            className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none focus:border-accent"
+          <PasswordInput
+            autoComplete="new-password"
             {...register("newPassword")}
           />
           {errors.newPassword && (
@@ -82,9 +82,8 @@ function ResetPasswordForm() {
         </div>
         <div>
           <label className="text-sm font-semibold text-ink">Confirm password</label>
-          <input
-            type="password"
-            className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none focus:border-accent"
+          <PasswordInput
+            autoComplete="new-password"
             {...register("confirmPassword")}
           />
           {errors.confirmPassword && (

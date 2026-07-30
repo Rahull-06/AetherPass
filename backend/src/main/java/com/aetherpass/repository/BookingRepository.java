@@ -22,7 +22,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     @EntityGraph(attributePaths = {
-            "event", "event.venue", "user",
+            "event", "event.venue", "user", "coupon",
             "seats", "seats.ticketCategory"
     })
     @Query("SELECT b FROM Booking b WHERE b.id = :id")
@@ -37,4 +37,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findExpiredPending(@Param("status") String status, @Param("now") Instant now);
 
     boolean existsByBookingCode(String bookingCode);
+
+    boolean existsByUserIdAndEventIdAndStatus(Long userId, Long eventId, String status);
+
+    long countByStatus(String status);
 }

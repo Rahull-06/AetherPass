@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { AxiosError } from "axios";
@@ -11,6 +11,33 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { BackLink } from "@/components/layout/back-button";
 import { useCreateEvent, useVenues } from "@/hooks/use-events";
 import { EVENT_CATEGORIES } from "@/types/event";
+
+const BANNER_PRESETS = [
+  {
+    label: "Concert lights",
+    url: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1600&q=80",
+  },
+  {
+    label: "Comedy stage",
+    url: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&w=1600&q=80",
+  },
+  {
+    label: "Marathon",
+    url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1600&q=80",
+  },
+  {
+    label: "Festival crowd",
+    url: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1600&q=80",
+  },
+  {
+    label: "Theatre",
+    url: "https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1600&q=80",
+  },
+  {
+    label: "Workshop",
+    url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1600&q=80",
+  },
+];
 
 const schema = z
   .object({
@@ -24,6 +51,11 @@ const schema = z
       "FESTIVAL",
       "WORKSHOP",
     ]),
+    bannerUrl: z
+      .string()
+      .url("Enter a valid image URL")
+      .optional()
+      .or(z.literal("")),
     venueId: z.coerce.number().min(1, "Pick a venue"),
     startsAt: z.string().min(1, "Start time required"),
     endsAt: z.string().min(1, "End time required"),
@@ -77,13 +109,16 @@ export default function CreateEventPage() {
     register,
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<FormValues>,
     defaultValues: {
       title: "",
       description: "",
       category: "MUSIC",
+      bannerUrl: "",
       venueId: 0,
       startsAt: defaultStart,
       endsAt: defaultEnd,
@@ -93,6 +128,8 @@ export default function CreateEventPage() {
       ],
     },
   });
+
+  const bannerUrl = watch("bannerUrl");
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -104,6 +141,7 @@ export default function CreateEventPage() {
     try {
       await createMutation.mutateAsync({
         ...values,
+        bannerUrl: values.bannerUrl?.trim() || undefined,
         startsAt: toIso(values.startsAt),
         endsAt: toIso(values.endsAt),
       });
@@ -146,6 +184,58 @@ export default function CreateEventPage() {
           <div>
             <label className="text-sm font-semibold text-ink">Description</label>
             <textarea className={`${field} min-h-28`} {...register("description")} />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-ink">Banner image</label>
+            <p className="mt-1 text-xs text-muted">
+              Pick a preset or paste any public image URL.
+            </p>
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {BANNER_PRESETS.map((preset) => (
+                <button
+                  key={preset.url}
+                  type="button"
+                  onClick={() =>
+                    setValue("bannerUrl", preset.url, { shouldValidate: true })
+                  }
+                  className={[
+                    "overflow-hidden rounded-xl ring-2 transition",
+                    bannerUrl === preset.url
+                      ? "ring-accent"
+                      : "ring-transparent hover:ring-border",
+                  ].join(" ")}
+                  title={preset.label}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preset.url}
+                    alt={preset.label}
+                    className="aspect-[4/3] h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+            <input
+              className={field}
+              placeholder="https://…"
+              {...register("bannerUrl")}
+            />
+            {errors.bannerUrl && (
+              <p className="mt-1 text-xs text-highlight">
+                {errors.bannerUrl.message}
+              </p>
+            )}
+            {bannerUrl?.trim() ? (
+              <div className="mt-3 overflow-hidden rounded-2xl border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={bannerUrl}
+                  alt="Banner preview"
+                  className="aspect-[16/9] w-full object-cover"
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

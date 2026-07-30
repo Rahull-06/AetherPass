@@ -6,6 +6,8 @@ import com.aetherpass.dto.response.PageResponse;
 import com.aetherpass.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +33,16 @@ public class EventController {
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<EventDetailResponse> detail(@PathVariable String slug) {
-        return ResponseEntity.ok(eventService.getPublishedBySlug(slug));
+    public ResponseEntity<EventDetailResponse> detail(
+            @PathVariable String slug,
+            Authentication authentication
+    ) {
+        String email = null;
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+            email = authentication.getName();
+        }
+        return ResponseEntity.ok(eventService.getPublishedBySlug(slug, email));
     }
 }

@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { AxiosError } from "axios";
 import { useAuth } from "@/providers/auth-provider";
 import { homeForRoles } from "@/services/auth.service";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -105,11 +106,9 @@ export function RegisterForm() {
         >
           Password
         </label>
-        <input
+        <PasswordInput
           id="reg-password"
-          type="password"
           autoComplete="new-password"
-          className={fieldClass}
           placeholder="At least 8 characters"
           {...register("password")}
         />

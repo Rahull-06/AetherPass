@@ -1,9 +1,11 @@
 package com.aetherpass.service;
 
+import com.aetherpass.dto.request.ApplyCouponRequest;
 import com.aetherpass.dto.request.HoldSeatsRequest;
 import com.aetherpass.dto.response.BookingResponse;
 import com.aetherpass.dto.response.SeatMapResponse;
 import com.aetherpass.entity.Booking;
+import com.aetherpass.entity.Coupon;
 import com.aetherpass.entity.Event;
 import com.aetherpass.entity.Seat;
 import com.aetherpass.entity.Ticket;
@@ -56,6 +58,7 @@ public class BookingService {
     private final SeatMapService seatMapService;
     private final PaymentService paymentService;
     private final BookingEventPublisher bookingEventPublisher;
+    private final CouponService couponService;
 
     public BookingService(
             EventRepository eventRepository,
@@ -66,7 +69,8 @@ public class BookingService {
             SeatLockService seatLockService,
             SeatMapService seatMapService,
             @Lazy PaymentService paymentService,
-            BookingEventPublisher bookingEventPublisher
+            BookingEventPublisher bookingEventPublisher,
+            CouponService couponService
     ) {
         this.eventRepository = eventRepository;
         this.seatRepository = seatRepository;
@@ -77,6 +81,7 @@ public class BookingService {
         this.seatMapService = seatMapService;
         this.paymentService = paymentService;
         this.bookingEventPublisher = bookingEventPublisher;
+        this.couponService = couponService;
     }
 
     public SeatMapResponse getSeatMap(String slug, String viewerEmail) {
@@ -215,12 +220,36 @@ public class BookingService {
         booking.getTickets().addAll(tickets);
         booking.setStatus(CONFIRMED);
         booking.setExpiresAt(null);
+        if (booking.getCoupon() != null) {
+            couponService.markUsed(booking.getCoupon());
+        }
         bookingRepository.save(booking);
 
         seatLockService.releaseSeats(booking.getSeats().stream().map(Seat::getId).toList());
         Booking confirmed = bookingRepository.findDetailedById(booking.getId()).orElse(booking);
         bookingEventPublisher.publishConfirmed(confirmed);
         return toResponse(confirmed);
+    }
+
+    public BookingResponse applyCoupon(String userEmail, Long bookingId, ApplyCouponRequest request) {
+        Booking booking = requireOwnedPendingForPayment(userEmail, bookingId);
+        Coupon coupon = couponService.requireValid(request.getCode());
+        couponService.requireMinOrder(coupon, booking.getSubtotal());
+        BigDecimal discount = couponService.calculateDiscount(coupon, booking.getSubtotal());
+        booking.setCoupon(coupon);
+        booking.setDiscountAmount(discount);
+        booking.setTotalAmount(booking.getSubtotal().subtract(discount).max(BigDecimal.ZERO));
+        bookingRepository.save(booking);
+        return toResponse(bookingRepository.findDetailedById(booking.getId()).orElse(booking));
+    }
+
+    public BookingResponse removeCoupon(String userEmail, Long bookingId) {
+        Booking booking = requireOwnedPendingForPayment(userEmail, bookingId);
+        booking.setCoupon(null);
+        booking.setDiscountAmount(BigDecimal.ZERO);
+        booking.setTotalAmount(booking.getSubtotal());
+        bookingRepository.save(booking);
+        return toResponse(bookingRepository.findDetailedById(booking.getId()).orElse(booking));
     }
 
     public Booking requireOwnedPendingForPayment(String userEmail, Long bookingId) {
@@ -364,6 +393,7 @@ public class BookingService {
                 .discountAmount(booking.getDiscountAmount())
                 .totalAmount(booking.getTotalAmount())
                 .currency(booking.getCurrency())
+                .couponCode(booking.getCoupon() != null ? booking.getCoupon().getCode() : null)
                 .expiresAt(booking.getExpiresAt())
                 .createdAt(booking.getCreatedAt())
                 .seats(seatInfos)

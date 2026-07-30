@@ -50,6 +50,10 @@ public class Booking {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
+
     @Column(nullable = false, length = 30)
     private String status; // PENDING | CONFIRMED | CANCELLED | EXPIRED | REFUNDED
 

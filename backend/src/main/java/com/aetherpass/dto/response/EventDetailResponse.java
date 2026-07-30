@@ -28,6 +28,9 @@ public class EventDetailResponse {
     private String status;
     private VenueResponse venue;
     private String organizerCompany;
+    private Double averageRating;
+    private Long reviewCount;
+    private Boolean wishlisted;
     private List<TicketCategoryResponse> ticketCategories;
 
     @Getter

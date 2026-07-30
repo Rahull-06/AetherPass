@@ -120,19 +120,31 @@ export default function HomePage() {
                   href={`/events/${featured.slug}`}
                   className="rise-in self-center overflow-hidden rounded-2xl ring-1 ring-white/10"
                 >
-                  <div className="relative aspect-[16/10] bg-black/40 p-6">
-                    <p className="text-xs font-bold tracking-wide text-white/60 uppercase">
-                      Featured · {featured.category}
-                    </p>
-                    <p className="font-display mt-3 text-3xl font-extrabold">
-                      {featured.title}
-                    </p>
-                    <p className="mt-2 text-sm text-white/70">
-                      {featured.venueName}, {featured.city}
-                    </p>
-                    <p className="mt-6 text-sm font-bold text-white">
-                      From ₹{Number(featured.minPrice).toLocaleString("en-IN")} →
-                    </p>
+                  <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+                    {featured.bannerUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={featured.bannerUrl}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+                    <div className="relative flex h-full flex-col justify-end p-6">
+                      <p className="text-xs font-bold tracking-wide text-white/70 uppercase">
+                        Featured · {featured.category}
+                      </p>
+                      <p className="font-display mt-3 text-3xl font-extrabold">
+                        {featured.title}
+                      </p>
+                      <p className="mt-2 text-sm text-white/75">
+                        {featured.venueName}, {featured.city}
+                      </p>
+                      <p className="mt-6 text-sm font-bold text-white">
+                        From ₹
+                        {Number(featured.minPrice).toLocaleString("en-IN")} →
+                      </p>
+                    </div>
                   </div>
                 </Link>
               )}

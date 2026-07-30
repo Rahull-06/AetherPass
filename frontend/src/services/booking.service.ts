@@ -16,6 +16,16 @@ export const bookingService = {
     return api.post<Booking>(`/bookings/${id}/cancel`).then((r) => r.data);
   },
 
+  applyCoupon(id: number, code: string) {
+    return api
+      .post<Booking>(`/bookings/${id}/coupon`, { code })
+      .then((r) => r.data);
+  },
+
+  removeCoupon(id: number) {
+    return api.post<Booking>(`/bookings/${id}/coupon/remove`).then((r) => r.data);
+  },
+
   myBookings() {
     return api.get<Booking[]>("/bookings/me").then((r) => r.data);
   },
