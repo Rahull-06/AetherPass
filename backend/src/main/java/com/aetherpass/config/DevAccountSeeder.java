@@ -25,7 +25,7 @@ import java.util.Set;
  */
 @Component
 @Profile("dev")
-@Order(1)
+@Order(2)
 @RequiredArgsConstructor
 @Slf4j
 public class DevAccountSeeder implements ApplicationRunner {

@@ -30,7 +30,7 @@ import java.util.List;
  */
 @Component
 @Profile("dev")
-@Order(2)
+@Order(3)
 @RequiredArgsConstructor
 @Slf4j
 public class DevCatalogSeeder implements ApplicationRunner {

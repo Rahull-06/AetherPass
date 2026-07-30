@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * Must never fail app startup on cloud (missing defaults / partial schema).
  */
 @Component
-@Order(1)
+@Order(0)
 @RequiredArgsConstructor
 @Slf4j
 public class SchemaPatchRunner implements ApplicationRunner {
@@ -23,6 +23,7 @@ public class SchemaPatchRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         try {
+            ensureTimestampDefaults();
             ensureCouponMinOrderColumn();
             patchCouponCatalog();
             ensureHyderabadVenues();
@@ -31,17 +32,84 @@ public class SchemaPatchRunner implements ApplicationRunner {
         }
     }
 
-    private void ensureCouponMinOrderColumn() {
+    /**
+     * Hibernate ddl-auto=update often creates created_at/updated_at as NOT NULL
+     * without DEFAULT, which breaks inserts that rely on DB defaults.
+     */
+    private void ensureTimestampDefaults() {
+        String[] createdOnly = {
+                "roles", "coupons", "refresh_tokens", "password_reset_tokens",
+                "wishlist", "notifications"
+        };
+        for (String table : createdOnly) {
+            alterCreatedAt(table);
+        }
+
+        String[] createdAndUpdated = {
+                "users", "organizers", "venues", "events", "ticket_categories",
+                "seats", "bookings", "tickets", "payments", "reviews"
+        };
+        for (String table : createdAndUpdated) {
+            alterCreatedAt(table);
+            alterUpdatedAt(table);
+        }
+    }
+
+    private void alterCreatedAt(String table) {
+        if (!tableExists(table) || !columnExists(table, "created_at")) {
+            return;
+        }
+        try {
+            jdbc.execute(
+                    "ALTER TABLE `" + table + "` MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+            );
+        } catch (Exception ex) {
+            log.debug("created_at default skip {}: {}", table, ex.getMessage());
+        }
+    }
+
+    private void alterUpdatedAt(String table) {
+        if (!tableExists(table) || !columnExists(table, "updated_at")) {
+            return;
+        }
+        try {
+            jdbc.execute(
+                    "ALTER TABLE `" + table + "` MODIFY COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+            );
+        } catch (Exception ex) {
+            log.debug("updated_at default skip {}: {}", table, ex.getMessage());
+        }
+    }
+
+    private boolean tableExists(String table) {
+        Integer count = jdbc.queryForObject(
+                """
+                        SELECT COUNT(*) FROM information_schema.TABLES
+                        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?
+                        """,
+                Integer.class,
+                table
+        );
+        return count != null && count > 0;
+    }
+
+    private boolean columnExists(String table, String column) {
         Integer count = jdbc.queryForObject(
                 """
                         SELECT COUNT(*) FROM information_schema.COLUMNS
                         WHERE TABLE_SCHEMA = DATABASE()
-                          AND TABLE_NAME = 'coupons'
-                          AND COLUMN_NAME = 'min_order_amount'
+                          AND TABLE_NAME = ?
+                          AND COLUMN_NAME = ?
                         """,
-                Integer.class
+                Integer.class,
+                table,
+                column
         );
-        if (count != null && count > 0) {
+        return count != null && count > 0;
+    }
+
+    private void ensureCouponMinOrderColumn() {
+        if (!tableExists("coupons") || columnExists("coupons", "min_order_amount")) {
             return;
         }
         jdbc.execute(
@@ -51,6 +119,9 @@ public class SchemaPatchRunner implements ApplicationRunner {
     }
 
     private void patchCouponCatalog() {
+        if (!tableExists("coupons")) {
+            return;
+        }
         jdbc.update("""
                 UPDATE coupons SET
                   description = CASE code
@@ -88,6 +159,9 @@ public class SchemaPatchRunner implements ApplicationRunner {
     }
 
     private void ensureHyderabadVenues() {
+        if (!tableExists("venues")) {
+            return;
+        }
         ensureVenue(
                 "Hitex Exhibition Centre",
                 "HITEX, Madhapur",
