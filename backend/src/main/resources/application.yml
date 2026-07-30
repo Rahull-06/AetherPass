@@ -22,12 +22,17 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5673}
     username: ${RABBITMQ_USER:aetherpass}
     password: ${RABBITMQ_PASSWORD:aetherpass}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL:false}
 
 server:
   port: ${PORT:${SERVER_PORT:8080}}

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Lightweight schema patches for local/demo DBs without Flyway.
+ * Must never fail app startup on cloud (missing defaults / partial schema).
  */
 @Component
 @Order(1)
@@ -21,9 +22,13 @@ public class SchemaPatchRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        ensureCouponMinOrderColumn();
-        patchCouponCatalog();
-        ensureHyderabadVenues();
+        try {
+            ensureCouponMinOrderColumn();
+            patchCouponCatalog();
+            ensureHyderabadVenues();
+        } catch (Exception ex) {
+            log.warn("Schema patch skipped (non-fatal): {}", ex.getMessage());
+        }
     }
 
     private void ensureCouponMinOrderColumn() {
@@ -72,9 +77,11 @@ public class SchemaPatchRunner implements ApplicationRunner {
         if (save10 != null && save10 == 0) {
             jdbc.update("""
                     INSERT INTO coupons
-                      (code, description, discount_type, discount_value, min_order_amount, max_uses, used_count, valid_from, valid_until, active)
+                      (code, description, discount_type, discount_value, min_order_amount,
+                       max_uses, used_count, valid_from, valid_until, active, created_at)
                     VALUES
-                      ('SAVE10', '10% off on Rs.1000+', 'PERCENT', 10.00, 1000.00, 10000, 0, NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), TRUE)
+                      ('SAVE10', '10% off on Rs.1000+', 'PERCENT', 10.00, 1000.00,
+                       10000, 0, NOW(), DATE_ADD(NOW(), INTERVAL 1 YEAR), TRUE, NOW())
                     """);
             log.info("Seeded SAVE10 coupon");
         }
@@ -118,8 +125,9 @@ public class SchemaPatchRunner implements ApplicationRunner {
         }
         jdbc.update(
                 """
-                        INSERT INTO venues (name, address_line, city, state, country, pincode, capacity)
-                        VALUES (?, ?, ?, ?, 'India', ?, ?)
+                        INSERT INTO venues
+                          (name, address_line, city, state, country, pincode, capacity, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, 'India', ?, ?, NOW(), NOW())
                         """,
                 name,
                 address,
