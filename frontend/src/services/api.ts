@@ -6,7 +6,8 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 15_000,
+  // Render free tier cold starts often exceed 15s.
+  timeout: 60_000,
 });
 
 type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -25,7 +26,7 @@ async function refreshAccessToken(): Promise<string | null> {
     const { data } = await axios.post(
       `${api.defaults.baseURL}/auth/refresh`,
       { refreshToken },
-      { timeout: 15_000 },
+      { timeout: 60_000 },
     );
     const accessToken = data.accessToken as string;
     const nextRefresh = data.refreshToken as string;
