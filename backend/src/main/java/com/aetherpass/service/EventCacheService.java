@@ -93,7 +93,12 @@ public class EventCacheService {
     }
 
     private String browseKey(String q, String category, String city, int page, int size) {
-        String version = Optional.ofNullable(redis.opsForValue().get(CATALOG_VERSION_KEY)).orElse("0");
+        String version = "0";
+        try {
+            version = Optional.ofNullable(redis.opsForValue().get(CATALOG_VERSION_KEY)).orElse("0");
+        } catch (Exception ex) {
+            log.warn("Redis unavailable, using default catalog version: {}", ex.getMessage());
+        }
         return BROWSE_PREFIX + version + ":"
                 + n(q) + "|" + n(category) + "|" + n(city) + "|" + page + "|" + size;
     }
