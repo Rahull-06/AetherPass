@@ -157,9 +157,13 @@ public class BookingService {
                 .map(s -> s.getTicketCategory().getPrice())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Instant expiresAt = Instant.now().plusSeconds(seatLockService.ttlSeconds());
+        String bookingCode = uniqueBookingCode();
+
+        // Acquire Redis lock BEFORE saving to database to prevent sequence burn on high concurrency
+        seatLockService.lockSeats(user.getId(), bookingCode, seatIds);
+
         Booking booking = Booking.builder()
-                .bookingCode(uniqueBookingCode())
+                .bookingCode(bookingCode)
                 .user(user)
                 .event(event)
                 .status(PENDING)
@@ -167,15 +171,14 @@ public class BookingService {
                 .discountAmount(BigDecimal.ZERO)
                 .totalAmount(subtotal)
                 .currency("INR")
-                .expiresAt(expiresAt)
+                .expiresAt(Instant.now().plusSeconds(seatLockService.ttlSeconds()))
                 .seats(new HashSet<>(seats))
                 .build();
-        booking = bookingRepository.save(booking);
 
         try {
-            seatLockService.lockSeats(user.getId(), booking.getId(), seatIds);
+            booking = bookingRepository.save(booking);
         } catch (RuntimeException ex) {
-            bookingRepository.delete(booking);
+            seatLockService.releaseSeats(seatIds);
             throw ex;
         }
 

@@ -1,0 +1,15 @@
+name: Keep Render Awake
+
+on:
+  schedule:
+    # Runs every 10 minutes to prevent Render's 15-minute sleep
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API Health Endpoint
+        # Replace the URL below with your actual Render API URL once you deploy
+        run: curl -s https://aetherpass-api.onrender.com/api/v1/health > /dev/null

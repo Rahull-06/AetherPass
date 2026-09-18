@@ -4,18 +4,19 @@ import com.aetherpass.exception.ApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Redis seat locks (5 minutes by default).
- * Key: seat-lock:{seatId} -> userId:bookingId
+ * Key: seat-lock:{seatId} -> userId:bookingRef
  * Why Redis: fast, auto-expiry, works across API instances.
  */
 @Service
@@ -26,6 +27,17 @@ public class SeatLockService {
 
     @Value("${aetherpass.seat-lock.ttl-seconds:300}")
     private long ttlSeconds;
+
+    private static final String LOCK_SCRIPT = 
+            "for i = 1, #KEYS do " +
+            "  if redis.call('EXISTS', KEYS[i]) == 1 then " +
+            "    return 0 " +
+            "  end " +
+            "end " +
+            "for i = 1, #KEYS do " +
+            "  redis.call('SET', KEYS[i], ARGV[1], 'EX', ARGV[2]) " +
+            "end " +
+            "return 1 ";
 
     private String key(Long seatId) {
         return "seat-lock:" + seatId;
@@ -50,28 +62,26 @@ public class SeatLockService {
     }
 
     /**
-     * Try to lock all seats for this user/booking. Rolls back if any seat is taken.
+     * Atomically lock all seats for this user/booking. Rolls back if any seat is taken.
      */
-    public void lockSeats(Long userId, Long bookingId, List<Long> seatIds) {
-        List<Long> locked = new ArrayList<>();
-        String payload = userId + ":" + bookingId;
-        Duration ttl = Duration.ofSeconds(ttlSeconds);
+    public void lockSeats(Long userId, String bookingRef, List<Long> seatIds) {
+        if (seatIds == null || seatIds.isEmpty()) return;
+        
+        String payload = userId + ":" + (bookingRef != null ? bookingRef : "PENDING");
+        List<String> keys = seatIds.stream().map(this::key).collect(Collectors.toList());
 
-        try {
-            for (Long seatId : seatIds) {
-                Boolean ok = redis.opsForValue().setIfAbsent(key(seatId), payload, ttl);
-                if (!Boolean.TRUE.equals(ok)) {
-                    throw new ApiException(
-                            "Seat just got taken. Pick another.",
-                            HttpStatus.CONFLICT,
-                            "SEAT_LOCKED"
-                    );
-                }
-                locked.add(seatId);
-            }
-        } catch (RuntimeException ex) {
-            releaseSeats(locked);
-            throw ex;
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText(LOCK_SCRIPT);
+        script.setResultType(Long.class);
+
+        Long result = redis.execute(script, keys, payload, String.valueOf(ttlSeconds));
+
+        if (result == null || result == 0L) {
+            throw new ApiException(
+                    "One or more seats are already taken. Please pick other seats.",
+                    HttpStatus.CONFLICT,
+                    "SEAT_LOCKED"
+            );
         }
     }
 

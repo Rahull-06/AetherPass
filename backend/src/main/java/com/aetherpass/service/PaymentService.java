@@ -132,7 +132,7 @@ public class PaymentService {
             throw new ApiException("Order mismatch", HttpStatus.BAD_REQUEST, "ORDER_MISMATCH");
         }
 
-        if (isMock() || "MOCK".equalsIgnoreCase(payment.getProvider())) {
+        if (isMock()) {
             if (!request.getRazorpayPaymentId().startsWith("pay_mock_")) {
                 throw new ApiException("Invalid mock payment", HttpStatus.BAD_REQUEST, "INVALID_PAYMENT");
             }
