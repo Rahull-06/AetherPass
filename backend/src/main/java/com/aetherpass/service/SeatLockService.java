@@ -48,17 +48,25 @@ public class SeatLockService {
     }
 
     public boolean isLocked(Long seatId) {
-        Boolean exists = redis.hasKey(key(seatId));
-        return Boolean.TRUE.equals(exists);
+        try {
+            Boolean exists = redis.hasKey(key(seatId));
+            return Boolean.TRUE.equals(exists);
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public Long lockedByUserId(Long seatId) {
-        String value = redis.opsForValue().get(key(seatId));
-        if (value == null) {
+        try {
+            String value = redis.opsForValue().get(key(seatId));
+            if (value == null) {
+                return null;
+            }
+            String[] parts = value.split(":");
+            return Long.parseLong(parts[0]);
+        } catch (Exception ex) {
             return null;
         }
-        String[] parts = value.split(":");
-        return Long.parseLong(parts[0]);
     }
 
     /**
@@ -74,7 +82,16 @@ public class SeatLockService {
         script.setScriptText(LOCK_SCRIPT);
         script.setResultType(Long.class);
 
-        Long result = redis.execute(script, keys, payload, String.valueOf(ttlSeconds));
+        Long result = null;
+        try {
+            result = redis.execute(script, keys, payload, String.valueOf(ttlSeconds));
+        } catch (Exception ex) {
+            throw new ApiException(
+                    "Our booking system is temporarily down for maintenance (Redis unavailable). Please try again later.",
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "SYSTEM_MAINTENANCE"
+            );
+        }
 
         if (result == null || result == 0L) {
             throw new ApiException(
